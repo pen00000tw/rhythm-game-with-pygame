@@ -20,7 +20,7 @@ pygame.display.set_caption("哎呀快要滑倒啦")
 #################################################################################
 
 WIN_WIDTH, WIN_HEIGHT = 1280, 720    #螢幕大小
-FRAME_PER_SECONDS = 30               #最大幀數(通常不準的啦)
+FRAME_PER_SECONDS = 144               #最大幀數(通常不準的啦)
 win = pygame.display.set_mode((WIN_WIDTH, WIN_HEIGHT))
 clock = pygame.time.Clock()
 img_base_path = os.getcwd() + '/images/'
@@ -37,6 +37,7 @@ now = 0.0
 counter = 0
 score = 0
 combo = 0
+copyarr = []
 #################################################################################
 ###                                                                           ###
 ###                              ### 圖片區 ###                                ###
@@ -185,7 +186,7 @@ group.add(character)
 #################################################################################
 #主渲染函式
 def redrawGameWindow():
-    global clickanimation,screen1,screen2,switch,now,score,combo
+    global clickanimation,screen1,screen2,switch,now,score,combo,counter,copyarr
     fps = font1.render('FPS:' + str(int(clock.get_fps())),True,(0,0,0))
     if screen1:
         #切換畫面
@@ -220,14 +221,17 @@ def redrawGameWindow():
         if switch:
             switch = False
             for i in range(objnum):
+                fall[i].__init__(win)
                 fall[i].load((i % 3) + 1)
             character.rect.centerx = x #初始人物座標X
             character.rect.centery = y #初始人物座標Y
+            counter = 0
             score = 0
             combo = 0
             playmusic('audio.mp3',1)
             now = time.time() #音樂撥放時開始計時
-            t.start()           #另一執行序開始產生物件
+            copyarr = arr.copy()
+            t.running.set()           #另一執行序開始產生物件
         if left:
             character.image = catchleft
         if right:
@@ -297,22 +301,6 @@ def detectCollisions(x1, y1, w1, h1, x2, y2, w2, h2):
     else:
         return False
 #產生物件
-def produce(a):
-    global now, counter,screen1,screen2,screen3,switch,t
-    while True:
-        if a ==[] and len(group1) == 0:
-            screen1 = False
-            screen2 = False
-            screen3 = True
-            switch = True
-            pygame.mixer.music.fadeout(4000)
-            break
-        tmp = time.time() - now
-        if a != [] and tmp >= a[0]:
-            group1.add(fall[counter])
-            del a[0]
-            counter += 1
-
 #################################################################################
 ###                                                                           ###
 ###                          ### 墜落物生成時間區 ###                          ###
@@ -354,8 +342,29 @@ arr = [8.378,8.69,9.007,9.608,9.92,10.249,10.88,11.196,11.821,12.446,
 ###                                                                           ###
 ###                          ### 執行序區 ###                                  ###
 #################################################################################
-t = threading.Thread(target=produce,args=(arr,))
-
+class que(threading.Thread):
+    def __init__(self):
+        threading.Thread.__init__(self)
+        self.running = threading.Event()
+        self.running.clear()
+    def run(self):
+        global now, counter,screen1,screen2,screen3,switch,t,copyarr
+        while True:
+            self.running.wait()
+            if copyarr ==[] and len(group1) == 0:
+                screen1 = False
+                screen2 = False
+                screen3 = True
+                switch = True
+                pygame.mixer.music.fadeout(3000)
+                self.running.clear()
+            tmp = time.time() - now
+            if copyarr != [] and tmp >= copyarr[0]:
+                group1.add(fall[counter])
+                del copyarr[0]
+                counter += 1
+t = que()
+t.start()
 #################################################################################
 ###                                                                           ###
 ###                          ### 主程式區 ###                                  ###
@@ -414,7 +423,26 @@ while run:
         clickanimation = True
         menuhit.play()
         if detectCollisions(pygame.mouse.get_pos()[0],pygame.mouse.get_pos()[1],8,8,1150,450,83,85):
-            run = False
+            printscore = chinese3.render(str(score),True,(100,100,100))
+            printcombo = chinese3.render(str(combo),True,(100,100,100))
+            for i in range(30):
+                clock.tick(60)
+                clickfps = font1.render('FPS:' + str(int(clock.get_fps())),True,(0,0,0))
+                win.blit(bg2,(0,0))
+                win.blit(clickfps,(1150,0))
+                win.blit(rankingpanel,(0,0))
+                win.blit(printscore,(75,70))
+                win.blit(printcombo,(75,450))
+                win.blit(rank,(405,415))
+                win.blit(songname,(73,640))
+                win.blit(retry,(1150,450))
+                win.blit(click[i % 30],(pygame.mouse.get_pos()[0] - 400,pygame.mouse.get_pos()[1] - 400))
+                pygame.display.update()
+            clickanimation = False
+            screen1 = True
+            screen2 = False
+            screen3 = False
+            switch = True
             pygame.mixer.music.fadeout(2000)
     else:
         clickanimation = False
