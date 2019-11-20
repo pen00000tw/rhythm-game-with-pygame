@@ -11,7 +11,7 @@ import os,time
 ###                                                                           ###
 ###                              ### 初始區 ###                                ###
 #################################################################################
-pygame.mixer.init(44100,-16,2,1200)    #(頻率,位元,通道數,緩衝)
+pygame.mixer.pre_init(44100,-16,2,1024)    #(頻率,位元,通道數,緩衝)
 pygame.init()
 pygame.display.set_caption("哎呀快要滑倒啦")
 #################################################################################
@@ -77,7 +77,7 @@ retry = pygame.image.load(img_base_path + 'pause-retry.png').convert_alpha()
 #################################################################################
 menuhit = pygame.mixer.Sound(sound_base_path + 'menuhit.wav')  #滑鼠點擊音效
 objhit = pygame.mixer.Sound(sound_base_path + 'normal-hitwhistle.wav') #打擊音效
-
+objhit.set_volume(0.4)
 #################################################################################
 ###                                                                           ###
 ###                              ### 文字區 ###                                ###
