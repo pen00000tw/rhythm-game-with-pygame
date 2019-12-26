@@ -146,7 +146,7 @@ class obj(pygame.sprite.Sprite):
             self.image = obj3[0]
             self.select = 3
         self.rect = self.image.get_rect()
-        self.rect.centerx = random.randrange(500,700)
+        self.rect.centerx = random.randrange(400,800)
         self.rect.centery = -20
         self.mask = pygame.mask.from_surface(self.image)
     def update(self,objspeed):
@@ -434,6 +434,10 @@ while run:
         else:
             left = False
             right = False
+        if keys[pygame.K_LSHIFT]:
+            charactermul = 1500
+        else:
+            charactermul = 750
         tmp = pygame.sprite.spritecollide(character,group1,False,pygame.sprite.collide_mask)
         if tmp:
             for i in tmp:
